@@ -10,6 +10,9 @@ struct CameraSettings {
     pub orthographic_zoom_speed: f32,
 }
 
+#[derive(Component)]
+struct Ball;
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -25,7 +28,7 @@ fn main() {
         .add_systems(Startup, setup_graphics)
         .add_systems(Startup, setup_physics)
         .add_systems(Update, print_ball_altitude)
-        .add_systems(Update, zoom)
+        .add_systems(Update, (zoom, sensor_events))
         .run();
 }
 
@@ -78,23 +81,60 @@ fn setup_physics(mut commands: Commands) {
             .with_rotation(Quat::from_rotation_z((-20.0_f32).to_radians())),
     );
 
+    commands
+        .spawn(Collider::cuboid(2000.0, 50.0))
+        .insert(Transform::from_xyz(1000.0, -1000.0, 0.0))
+        .insert(Sensor)
+        .insert(ActiveEvents::COLLISION_EVENTS);
+
     /* Create the bouncing ball. */
     commands
         .spawn(RigidBody::Dynamic)
         .insert(Collider::ball(50.0))
-        .insert(Restitution::coefficient(0.7))
-        .insert(Transform::from_xyz(0.0, 400.0, 0.0));
+        .insert(Restitution::coefficient(0.3))
+        .insert(Transform::from_xyz(0.0, 400.0, 0.0))
+        .insert(Velocity::default())
+        .insert(Ball);
 
     commands
         .spawn(RigidBody::Dynamic)
         .insert(GravityScale(2.0))
         .insert(Collider::ball(50.0))
-        .insert(Restitution::coefficient(0.7))
-        .insert(Transform::from_xyz(200.0, 400.0, 0.0));
+        .insert(Restitution::coefficient(0.9))
+        .insert(Transform::from_xyz(200.0, 400.0, 0.0))
+        .insert(Velocity::default())
+        .insert(Ball);
 }
 
 fn print_ball_altitude(positions: Query<&Transform, With<RigidBody>>) {
     for transform in positions.iter() {
         println!("Ball altitude: {}", transform.translation.y);
+    }
+}
+
+fn sensor_events(
+    mut collision_events: MessageReader<CollisionEvent>,
+    mut balls: Query<(&mut Transform, &mut Velocity), With<Ball>>,
+) {
+    for event in collision_events.read() {
+        let CollisionEvent::Started(e1, e2, _) = event else {
+            continue;
+        };
+
+        let ball = if balls.contains(*e1) {
+            Some(*e1)
+        } else if balls.contains(*e2) {
+            Some(*e2)
+        } else {
+            None
+        };
+
+        if let Some(ball_entity) = ball
+            && let Ok((mut transform, mut velocity)) = balls.get_mut(ball_entity)
+        {
+            transform.translation = Vec3::new(200.0, 400.0, 0.0);
+            velocity.linear = Vec2::ZERO;
+            velocity.angular = 0.0;
+        }
     }
 }
