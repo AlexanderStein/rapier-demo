@@ -70,16 +70,22 @@ fn zoom(
 
 fn setup_physics(mut commands: Commands) {
     /* Create the ground. */
-    commands.spawn(Collider::cuboid(300.0, 50.0)).insert(
-        Transform::from_xyz(100.0, -100.0, 0.0)
-            .with_rotation(Quat::from_rotation_z((10.0_f32).to_radians())),
-    );
+    commands
+        .spawn(Collider::cuboid(300.0, 50.0))
+        .insert(RigidBody::KinematicPositionBased)
+        .insert(
+            Transform::from_xyz(100.0, -100.0, 0.0)
+                .with_rotation(Quat::from_rotation_z((10.0_f32).to_radians())),
+        );
 
     /* Create the ground. */
-    commands.spawn(Collider::cuboid(300.0, 50.0)).insert(
-        Transform::from_xyz(-200.0, -500.0, 0.0)
-            .with_rotation(Quat::from_rotation_z((-20.0_f32).to_radians())),
-    );
+    commands
+        .spawn(Collider::cuboid(300.0, 50.0))
+        .insert(RigidBody::KinematicPositionBased)
+        .insert(
+            Transform::from_xyz(-200.0, -500.0, 0.0)
+                .with_rotation(Quat::from_rotation_z((-20.0_f32).to_radians())),
+        );
 
     commands
         .spawn(Collider::cuboid(2000.0, 50.0))
