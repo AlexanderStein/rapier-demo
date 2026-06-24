@@ -6,6 +6,8 @@ edition = "2024"
 [dependencies]
 bevy_rapier2d = "0.34.0"
 bevy = "0.18"
+qrcode = "0.14"
+image = "0.25"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]

@@ -2,6 +2,10 @@ use bevy::{input::mouse::AccumulatedMouseScroll, prelude::*};
 use bevy_rapier2d::prelude::*;
 use std::ops::Range;
 
+mod qr;
+
+use qr::generate_qr_image;
+
 #[derive(Debug, Resource)]
 struct CameraSettings {
     /// Clamp the orthographic camera's scale to this range
@@ -32,7 +36,7 @@ fn main() {
         .run();
 }
 
-fn setup_graphics(mut commands: Commands) {
+fn setup_graphics(mut commands: Commands, mut images: ResMut<Assets<Image>>) {
     // Add a camera so we can see the debug-render.
     commands
         .spawn(Camera2d)
@@ -43,6 +47,24 @@ fn setup_graphics(mut commands: Commands) {
             ..OrthographicProjection::default_2d()
         }))
         .insert(Transform::from_xyz(0.0, 0.0, 50.0).looking_at(Vec3::ZERO, Vec3::Y));
+
+    let qr_image = generate_qr_image("https://example.com");
+
+    let handle = images.add(qr_image);
+
+    commands.spawn((
+        ImageNode::new(handle),
+        Node {
+            position_type: PositionType::Absolute,
+
+            bottom: Val::Px(10.0),
+            right: Val::Px(10.0),
+
+            width: Val::Px(256.0),
+            height: Val::Px(256.0),
+            ..default()
+        },
+    ));
 }
 
 fn zoom(
